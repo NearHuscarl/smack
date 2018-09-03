@@ -1,0 +1,11 @@
+<resources>
+    <style name="AppTheme.NoActionBar">
+        <!--<item name="coordinatorLayoutStyle">@style/Widget.Support.CoordinatorLayout</item>-->
+        <!--<item name="floatingActionButtonStyle">@style/Widget.Design.FloatingActionButton</item>-->
+        <!--<item name="navigationViewStyle">@style/Widget.Design.NavigationView</item>-->
+
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+</resources>
