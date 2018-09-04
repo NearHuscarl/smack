@@ -9,5 +9,6 @@ const val LOGIN_URL = "$BASE_URL/account/login"
 const val CREATE_USER_URL = "$BASE_URL/user/add"
 const val GET_USER_URL = "$BASE_URL/user/byEmail"
 const val GET_CHANNELS_URL = "$BASE_URL/channel"
+const val GET_MESSAGES_URL = "$BASE_URL/message/byChannel"
 
 const val BROADCAST_USER_DATA_CHANGE = "BROADCAST_USER_DATA_CHANGE"
