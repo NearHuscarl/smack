@@ -12,3 +12,4 @@ const val GET_CHANNELS_URL = "$BASE_URL/channel"
 const val GET_MESSAGES_URL = "$BASE_URL/message/byChannel"
 
 const val BROADCAST_USER_DATA_CHANGE = "BROADCAST_USER_DATA_CHANGE"
+const val SIGN_IN_REQUEST_CODE = 1

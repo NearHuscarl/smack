@@ -7,9 +7,16 @@ import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import com.google.firebase.database.FirebaseDatabase
 import com.nearhuscarl.smack.R
 import com.nearhuscarl.smack.Services.AuthService
 import kotlinx.android.synthetic.main.activity_login.*
+import com.google.android.gms.tasks.Task
+import android.support.annotation.NonNull
+import com.google.android.gms.tasks.OnCompleteListener
+import com.firebase.ui.auth.AuthUI
+
+
 
 class LoginActivity : AppCompatActivity() {
 
@@ -20,32 +27,25 @@ class LoginActivity : AppCompatActivity() {
         loginSpinner.visibility = View.INVISIBLE
     }
 
+    object Num { // TODO: REMOVE
+        var a = 0
+    }
+
     fun loginLoginBtnClicked(view: View) {
+
         enableSpinner(true)
-
-        val email = loginEmailTxt.text.toString()
-        val password = loginPasswordTxt.text.toString()
-
         hideKeyboard()
 
-        if (email.isNotEmpty() && password.isNotEmpty()) {
-            AuthService.loginUser(email, password) { loginSuccess ->
-                if (loginSuccess) {
-                    AuthService.findUserByEmail(this) { findSuccess ->
-                        if (findSuccess) {
-                            enableSpinner(false)
-                            finish()
-                        } else {
-                            errorToast()
-                        }
-                    }
-                } else {
-                    errorToast()
+        AuthUI.getInstance().signOut(this)
+                .addOnCompleteListener {
+                    Toast.makeText(this,
+                            "You have been signed out.",
+                            Toast.LENGTH_LONG)
+                            .show()
+
+                    enableSpinner(false)
+                    finish()
                 }
-            }
-        } else {
-            errorToast("Please fill in both email and password")
-        }
     }
 
     fun loginCreateUserBtnClicked(view: View) {

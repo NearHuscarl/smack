@@ -1,5 +1,6 @@
 package com.nearhuscarl.smack.Controllers
 
+import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -12,10 +13,14 @@ import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.Toast
+import com.firebase.ui.auth.AuthUI
+import com.google.firebase.auth.FirebaseAuth
 import com.nearhuscarl.smack.Adapters.MessageAdapter
 import com.nearhuscarl.smack.Models.Channel
 import com.nearhuscarl.smack.Models.Message
@@ -24,6 +29,7 @@ import com.nearhuscarl.smack.Services.AuthService
 import com.nearhuscarl.smack.Services.MessageService
 import com.nearhuscarl.smack.Services.UserDataService
 import com.nearhuscarl.smack.Utilities.BROADCAST_USER_DATA_CHANGE
+import com.nearhuscarl.smack.Utilities.SIGN_IN_REQUEST_CODE
 import com.nearhuscarl.smack.Utilities.SOCKET_URL
 import io.socket.client.IO
 import io.socket.emitter.Emitter
@@ -54,10 +60,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        socket.connect()
-        socket.on("channelCreated", onNewChannel)
-        socket.on("messageCreated", onNewMessage)
-
         val toggle = ActionBarDrawerToggle(
                 this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
         drawer_layout.addDrawerListener(toggle)
@@ -65,45 +67,61 @@ class MainActivity : AppCompatActivity() {
 
         setupAdapters()
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(userDataChangeReceiver,
-                IntentFilter(BROADCAST_USER_DATA_CHANGE))
-
         channel_list.setOnItemClickListener { _, _, position, _ ->
             selectedChannel = MessageService.channels[position]
             drawer_layout.closeDrawer(GravityCompat.START)
             updateWithChannel()
         }
 
-        if (App.sharedPrefs.isLoggedIn) {
-            AuthService.findUserByEmail(this) {}
+        logIn()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int,
+                                  data: Intent) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == SIGN_IN_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                Toast.makeText(this,
+                        "Signed in successfully. Welcome!",
+                        Toast.LENGTH_LONG)
+                        .show()
+
+                val user = FirebaseAuth.getInstance().currentUser
+
+                displayChatMessages(user?.uid, user?.displayName, user?.email)
+            } else {
+                Toast.makeText(this,
+                        "Couldn't sign in. Please try again later.",
+                        Toast.LENGTH_LONG)
+                        .show()
+
+                finish()
+            }
         }
+
     }
 
-    override fun onDestroy() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(userDataChangeReceiver)
-        socket.disconnect()
+    fun displayChatMessages(id: String?, name: String?, email: String?)
+    {
+        UserDataService.id = id.toString()
+        UserDataService.name = name.toString()
+        UserDataService.email = email.toString()
 
-        super.onDestroy()
-    }
+        userNameNavHeader.text = UserDataService.name
+        userEmailNavHeader.text = UserDataService.email
 
-    private val userDataChangeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent?) {
-            if (App.sharedPrefs.isLoggedIn) {
-                userNameNavHeader.text = UserDataService.name
-                userEmailNavHeader.text = UserDataService.email
+        // TODO: handle avatar
+//        val resourceId = resources.getIdentifier(UserDataService.avatarName, "drawable", packageName)
+//        userImageNavHeader.setImageResource(resourceId)
+//        userImageNavHeader.setBackgroundColor(UserDataService.returnAvatarColor(UserDataService.avatarColor))
+        loginBtnNavHeader.text = "Log out"
 
-                val resourceId = resources.getIdentifier(UserDataService.avatarName, "drawable", packageName)
-                userImageNavHeader.setImageResource(resourceId)
-                userImageNavHeader.setBackgroundColor(UserDataService.returnAvatarColor(UserDataService.avatarColor))
-                loginBtnNavHeader.text = "LOGOUT"
-
-                MessageService.getChannels { complete ->
-                    if (MessageService.channels.count() > 0) {
-                        selectedChannel = MessageService.channels[0]
-                        channelAdapter.notifyDataSetChanged()
-                        updateWithChannel()
-                    }
-                }
+        MessageService.getChannels { complete ->
+            if (MessageService.channels.count() > 0) {
+                selectedChannel = MessageService.channels[0]
+                channelAdapter.notifyDataSetChanged()
+                updateWithChannel()
             }
         }
     }
@@ -135,22 +153,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun loginBtnNavClicked(view: View) {
-        if (App.sharedPrefs.isLoggedIn) {
-            UserDataService.logout()
-
-            channelAdapter.notifyDataSetChanged()
-            messageAdapter.notifyDataSetChanged()
-
-            userNameNavHeader.text = ""
-            userEmailNavHeader.text = ""
-            userImageNavHeader.setImageResource(R.drawable.profiledefault)
-            userImageNavHeader.setBackgroundColor(Color.TRANSPARENT)
-            loginBtnNavHeader.text = "LOGIN"
-            mainChannelName.text = "Please Log In"
-        } else {
-            val loginIntent = Intent(this, LoginActivity::class.java)
-            startActivity(loginIntent)
-        }
+        if (App.sharedPrefs.isLoggedIn)
+            logOut()
+        else
+            logIn()
     }
 
     fun addChannelClicked(view: View) {
@@ -171,6 +177,51 @@ class MainActivity : AppCompatActivity() {
                     }
                     .show()
         }
+    }
+
+    private fun logIn()
+    {
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            startActivityForResult(
+                    AuthUI.getInstance()
+                            .createSignInIntentBuilder()
+                            .build(),
+                    SIGN_IN_REQUEST_CODE
+            )
+        } else {
+            Toast.makeText(this,
+                    "Welcome back " + FirebaseAuth.getInstance().currentUser?.displayName,
+                    Toast.LENGTH_LONG)
+                    .show()
+            val user = FirebaseAuth.getInstance().currentUser
+
+            displayChatMessages(user?.uid, user?.displayName, user?.email)
+        }
+
+        App.sharedPrefs.isLoggedIn = true
+    }
+
+    private fun logOut()
+    {
+        AuthUI.getInstance().signOut(this)
+                .addOnCompleteListener {
+                    UserDataService.logout()
+
+                    channelAdapter.notifyDataSetChanged()
+                    messageAdapter.notifyDataSetChanged()
+
+                    userNameNavHeader.text = ""
+                    userEmailNavHeader.text = ""
+                    userImageNavHeader.setImageResource(R.drawable.profiledefault)
+                    userImageNavHeader.setBackgroundColor(Color.TRANSPARENT)
+                    mainChannelName.text = "Please Log In"
+                    loginBtnNavHeader.text = "Log in"
+
+                    Toast.makeText(this,
+                            "You have been signed out.",
+                            Toast.LENGTH_LONG)
+                            .show()
+                }
     }
 
     private val onNewChannel = Emitter.Listener { args ->

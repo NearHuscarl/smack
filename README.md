@@ -1,6 +1,6 @@
-# Smack
+# Android chat app
 
-# Development tool
+## Development tool
 * Intellij + Android plugin
 * [mac-chat-api] - Prebuilt API for the chat app
 * [Heroku] - A service to deploy and host your code on the internet so anyone can see it
