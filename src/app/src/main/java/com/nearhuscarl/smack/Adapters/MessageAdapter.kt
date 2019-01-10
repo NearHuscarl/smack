@@ -11,7 +11,6 @@ import android.widget.TextView
 import com.nearhuscarl.smack.Models.Message
 import com.nearhuscarl.smack.R
 import com.nearhuscarl.smack.Services.UserDataService
-import java.text.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -38,15 +37,17 @@ class MessageAdapter(val context: Context, val messages: ArrayList<Message>) : R
         val messageBody = itemView?.findViewById<TextView>(R.id.messageBodyLbl)
 
         fun bindMessage(context: Context, message: Message) {
-            val resourceId = context.resources.getIdentifier(message.userAvatar, "drawable", context.packageName)
+            // TODO: add avatar and remove those lines
+            val resourceId = context.resources.getIdentifier("dark1", "drawable", context.packageName)
             userImage?.setImageResource(resourceId)
-            userImage?.setBackgroundColor(UserDataService.returnAvatarColor(message.userAvatarColor))
+            userImage?.setBackgroundColor(UserDataService.returnAvatarColor("[0.5, 0.5, 0.5, 1]"))
+
             userName?.text = message.userName
-            timeStamp?.text = returnDateString(message.timeStamp)
-            messageBody?.text = message.message
+            timeStamp?.text = getFormattedDate(message.timeStamp)
+            messageBody?.text = message.messageBody
         }
 
-        fun returnDateString(isoString: String) : String {
+        private fun returnDateString(isoString: String): String {
             val isoFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
             isoFormatter.timeZone = TimeZone.getTimeZone("UTC")
 
@@ -57,8 +58,16 @@ class MessageAdapter(val context: Context, val messages: ArrayList<Message>) : R
                 Log.d("PARSE", "Cannot parse date")
             }
 
-            val outDateString = SimpleDateFormat("EEE, h:mm: a", Locale.getDefault())
+            val outDateString = SimpleDateFormat("EEE, h:mm:ss a", Locale.getDefault())
             return outDateString.format(convertedDate)
+        }
+
+        private fun getFormattedDate(epochTime: String): String {
+            val date = Date(epochTime.toLong())
+            val formatter = SimpleDateFormat("EEE, h:mm:ss a", Locale.getDefault())
+            formatter.timeZone = TimeZone.getDefault()
+
+            return formatter.format(date)
         }
     }
 }

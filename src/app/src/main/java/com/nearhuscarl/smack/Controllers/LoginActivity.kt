@@ -27,25 +27,9 @@ class LoginActivity : AppCompatActivity() {
         loginSpinner.visibility = View.INVISIBLE
     }
 
-    object Num { // TODO: REMOVE
-        var a = 0
-    }
-
     fun loginLoginBtnClicked(view: View) {
-
         enableSpinner(true)
         hideKeyboard()
-
-        AuthUI.getInstance().signOut(this)
-                .addOnCompleteListener {
-                    Toast.makeText(this,
-                            "You have been signed out.",
-                            Toast.LENGTH_LONG)
-                            .show()
-
-                    enableSpinner(false)
-                    finish()
-                }
     }
 
     fun loginCreateUserBtnClicked(view: View) {
