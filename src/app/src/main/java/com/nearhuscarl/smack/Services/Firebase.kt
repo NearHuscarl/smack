@@ -9,6 +9,9 @@ object Firebase {
 
     fun Initialize()
     {
+        // Cache data for offline usage
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true)
+
         database = FirebaseDatabase.getInstance().reference
     }
 

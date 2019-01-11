@@ -4,11 +4,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
-import android.support.annotation.RequiresApi
 import android.support.v4.view.GravityCompat
-import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -23,6 +20,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 import com.nearhuscarl.smack.Adapters.MessageAdapter
 import com.nearhuscarl.smack.Models.Channel
 import com.nearhuscarl.smack.Models.Message
@@ -31,6 +29,7 @@ import com.nearhuscarl.smack.R
 import com.nearhuscarl.smack.Services.Firebase
 import com.nearhuscarl.smack.Services.MessageService
 import com.nearhuscarl.smack.Services.UserDataService
+import com.nearhuscarl.smack.SmoothActionBarDrawerToggle
 import com.nearhuscarl.smack.Utilities.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
@@ -41,7 +40,10 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var channelAdapter: ArrayAdapter<Channel>
     lateinit var messageAdapter: MessageAdapter
+    lateinit var drawerToggle: SmoothActionBarDrawerToggle
+    var messageCountOnLoading = 0
     var selectedChannel: Channel? = null
+
 
     private fun setupAdapters() {
         channelAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, MessageService.channels)
@@ -58,19 +60,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        val toggle = ActionBarDrawerToggle(
+        drawerToggle = SmoothActionBarDrawerToggle(
                 this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-        drawer_layout.addDrawerListener(toggle)
-        toggle.syncState()
+        drawer_layout.addDrawerListener(drawerToggle)
+        drawerToggle.syncState()
 
         setupAdapters()
 
         channel_list.setOnItemClickListener { _, _, position, _ ->
-            drawer_layout.closeDrawer(GravityCompat.START)
-
-            unsubscribeChannel(selectedChannel?.id)
-            selectedChannel = MessageService.channels[position]
-            updateChatMessages(selectedChannel?.id)
+            changeChannel(position)
         }
 
         logIn()
@@ -95,7 +93,7 @@ class MainActivity : AppCompatActivity() {
 
                 val user = FirebaseAuth.getInstance().currentUser
 
-                displayChatMessages(user?.uid, user?.displayName, user?.email)
+                displayChatMessagesAtStartup(user?.uid, user?.displayName, user?.email)
             } else {
                 Toast.makeText(this,
                         "Couldn't sign in. Please try again later.",
@@ -108,8 +106,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun displayChatMessages(id: String?, name: String?, email: String?)
-    {
+    private fun displayChatMessagesAtStartup(id: String?, name: String?, email: String?) {
         UserDataService.id = id.toString()
         UserDataService.name = name.toString()
         UserDataService.email = email.toString()
@@ -129,18 +126,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun unsubscribeChannel(channelId: String?) {
-        Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF")
-                .removeEventListener(onNewMessage)
+        Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF").removeEventListener(onNewMessage)
         MessageService.clearMessages()
         messageAdapter.notifyDataSetChanged()
     }
 
-    private fun updateChatMessages(channelId: String?) {
+    private fun subscribeChannel(channelId: String?) {
         mainChannelName.text = selectedChannel?.toString()
         MessageService.clearMessages()
 
-        Firebase.database.child("$CHANNELS_REF/${selectedChannel?.id}/$MESSAGES_REF")
-                .addChildEventListener(onNewMessage)
+        Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF").addListenerForSingleValueEvent(onLoadingNewChannel)
+        Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF").addChildEventListener(onNewMessage)
     }
 
     override fun onBackPressed() {
@@ -151,15 +147,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun loginBtnNavClicked(view: View) {
+    fun loginBtnNavClicked() {
         if (App.sharedPrefs.isLoggedIn)
             logOut()
         else
             logIn()
     }
 
-    private fun logIn()
-    {
+    private fun logIn() {
         if (FirebaseAuth.getInstance().currentUser == null) {
             startActivityForResult(
                     AuthUI.getInstance()
@@ -174,14 +169,13 @@ class MainActivity : AppCompatActivity() {
                     .show()
             val user = FirebaseAuth.getInstance().currentUser
 
-            displayChatMessages(user?.uid, user?.displayName, user?.email)
+            displayChatMessagesAtStartup(user?.uid, user?.displayName, user?.email)
         }
 
         App.sharedPrefs.isLoggedIn = true
     }
 
-    private fun logOut()
-    {
+    private fun logOut() {
         AuthUI.getInstance().signOut(this)
                 .addOnCompleteListener {
                     unsubscribeChannel(selectedChannel?.id)
@@ -204,18 +198,35 @@ class MainActivity : AppCompatActivity() {
                 }
     }
 
-    private val onNewChannel = object : ChildEventListener {
+    private val onLoadingNewChannel = object : ValueEventListener {
+        override fun onDataChange(dataSnapshot: DataSnapshot) {
+            if (dataSnapshot.exists())
+                messageCountOnLoading = dataSnapshot.childrenCount.toInt()
+            else
+                enableSpinner(false)
+        }
+
+        override fun onCancelled(databaseError: DatabaseError) {
+            Log.e("ERROR", "onNewChannel:onCancelled", databaseError.toException())
+        }
+    }
+
+    private val onNewChannel = object : ChildEventListener
+    {
         override fun onChildAdded(dataSnapshot: DataSnapshot, previousChildName: String?) {
-//            runOnUiThread {
-            if (App.sharedPrefs.isLoggedIn) {
+            runOnUiThread {
                 val channelId = dataSnapshot.child(ID_REF).value.toString()
                 val channelName = dataSnapshot.child(NAME_REF).value.toString()
                 val channelDesc = dataSnapshot.child(DESCRIPTION_REF).value.toString()
                 val newChannel = Channel(channelId, channelName, channelDesc)
 
+                drawer_layout.closeDrawer(GravityCompat.START)
                 MessageService.channels.add(newChannel)
                 channelAdapter.notifyDataSetChanged()
-                updateChatMessages(selectedChannel?.id)
+                subscribeChannel(selectedChannel?.id)
+/*
+                changeChannel(MessageService.channels.count() - 1)
+*/
             }
         }
 
@@ -238,23 +249,31 @@ class MainActivity : AppCompatActivity() {
 
     private val onNewMessage = object : ChildEventListener {
         override fun onChildAdded(dataSnapshot: DataSnapshot, previousChildName: String?) {
-            if (App.sharedPrefs.isLoggedIn) {
-                val channelId = dataSnapshot.child(CHANNEL_ID_REF).value.toString()
+            val channelId = dataSnapshot.child(CHANNEL_ID_REF).value.toString()
 
-                if (channelId == selectedChannel?.id) {
-                    val id = dataSnapshot.child(ID_REF).value.toString()
-                    var msgBody = dataSnapshot.child(MESSAGE_BODY_REF).value.toString() // TODO: change back to val
-                    val userName = dataSnapshot.child(USER_NAME_REF).value.toString()
-                    val avatarUrl = dataSnapshot.child(AVATAR_URL_REF).value.toString()
-                    val timeStamp = dataSnapshot.child(TIMESTAMP_REF).value.toString()
+            if (channelId == selectedChannel?.id) {
+                val id = dataSnapshot.child(ID_REF).value.toString()
+                var msgBody = dataSnapshot.child(MESSAGE_BODY_REF).value.toString() // TODO: change back to val
+                val userName = dataSnapshot.child(USER_NAME_REF).value.toString()
+                val avatarUrl = dataSnapshot.child(AVATAR_URL_REF).value.toString()
+                val timeStamp = dataSnapshot.child(TIMESTAMP_REF).value.toString()
 
-                    msgBody += "\nAvatar url: $avatarUrl" // TODO: add avatar and remove this line
-                    val newMessage = Message(id, msgBody, channelId, userName, avatarUrl, timeStamp)
-                    MessageService.messages.add(newMessage)
+                msgBody += "\nAvatar url: $avatarUrl" // TODO: add avatar and remove this line
+                val newMessage = Message(id, msgBody, channelId, userName, avatarUrl, timeStamp)
+                MessageService.messages.add(newMessage)
+            }
+
+            // Only run those lines of code AFTER the drawer closing completely
+            // to avoid making the closing animation stutter
+            // https://stackoverflow.com/questions/18343018/optimizing-drawer-and-activity-launching-speed
+            drawerToggle.runWhenIdle(Runnable {
+                if (MessageService.messages.count() == messageCountOnLoading || messageCountOnLoading == -1) {
                     messageAdapter.notifyDataSetChanged()
                     messageListView.smoothScrollToPosition(messageAdapter.itemCount - 1)
+                    enableSpinner(false)
+                    messageCountOnLoading = -1
                 }
-            }
+            })
         }
 
         override fun onChildChanged(dataSnapshot: DataSnapshot, previousChildName: String?) {
@@ -274,7 +293,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun addChannelClicked(view: View) {
+    private fun changeChannel(newChannelIndex: Int) {
+        if (newChannelIndex > MessageService.channels.count() - 1)
+            return
+
+        drawer_layout.closeDrawer(GravityCompat.START)
+        val newChannel = MessageService.channels[newChannelIndex]
+
+        if (newChannel.id != selectedChannel?.id || selectedChannel == null) {
+            enableSpinner(true)
+            unsubscribeChannel(selectedChannel?.id)
+            selectedChannel = newChannel
+            subscribeChannel(selectedChannel?.id)
+        }
+    }
+
+    fun addChannelClicked() {
         if (App.sharedPrefs.isLoggedIn) {
             val builder = AlertDialog.Builder(this)
             val dialogView = layoutInflater.inflate(R.layout.add_channel_dialog, null)
@@ -301,8 +335,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun sendMessageBtnClicked(view: View) {
+    fun sendMessageBtnClicked() {
         if (App.sharedPrefs.isLoggedIn && messageTextField.text.isNotEmpty() && selectedChannel != null) {
             val channelId = selectedChannel?.id.toString()
             val messagesRef = Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF")
@@ -333,6 +366,14 @@ class MainActivity : AppCompatActivity() {
 
         if (inputManager.isAcceptingText) {
             inputManager.hideSoftInputFromWindow(currentFocus.windowToken, 0)
+        }
+    }
+
+    fun enableSpinner(enable: Boolean) {
+        if (enable) {
+            spinner.visibility = View.VISIBLE
+        } else {
+            spinner.visibility = View.INVISIBLE
         }
     }
 }
