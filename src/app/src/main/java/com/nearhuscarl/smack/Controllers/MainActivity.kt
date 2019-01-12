@@ -1,20 +1,23 @@
 package com.nearhuscarl.smack.Controllers
 
 import android.app.Activity
+import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
+import android.text.Editable
+import android.text.TextUtils
+import android.text.TextWatcher
 import android.util.Log
-import android.view.View
+import android.view.*
 import android.view.inputmethod.InputMethodManager
-import android.widget.ArrayAdapter
-import android.widget.EditText
-import android.widget.Toast
+import android.widget.*
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
@@ -36,14 +39,15 @@ import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 
-class MainActivity : AppCompatActivity() {
-
+class MainActivity : AppCompatActivity()
+{
     lateinit var channelAdapter: ArrayAdapter<Channel>
     lateinit var messageAdapter: MessageAdapter
     lateinit var drawerToggle: SmoothActionBarDrawerToggle
-    var messageCountOnLoading = 0
+    var messagesLoaded = false
     var selectedChannel: Channel? = null
 
+    var typingStarted = false
 
     private fun setupAdapters() {
         channelAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, MessageService.channels)
@@ -71,6 +75,8 @@ class MainActivity : AppCompatActivity() {
             changeChannel(position)
         }
 
+        messageTextField.addTextChangedListener(messageTextChangeHandler)
+
         logIn()
     }
 
@@ -80,8 +86,7 @@ class MainActivity : AppCompatActivity() {
         Firebase.database.child(CHANNELS_REF).removeEventListener(onNewChannel)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int,
-                                  data: Intent) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == SIGN_IN_REQUEST_CODE) {
@@ -103,7 +108,6 @@ class MainActivity : AppCompatActivity() {
                 finish()
             }
         }
-
     }
 
     private fun displayChatMessagesAtStartup(id: String?, name: String?, email: String?) {
@@ -127,6 +131,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun unsubscribeChannel(channelId: String?) {
         Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF").removeEventListener(onNewMessage)
+        Firebase.database.child("$CHANNELS_REF/$channelId/$SOMEONE_TYPING_REF").removeEventListener(onSomeoneTypingMessage)
+
+        if (UserDataService.id == Firebase.database.child("$CHANNELS_REF/$channelId/$SOMEONE_TYPING_REF/$USER_ID_REF").toString())
+        {
+            Firebase.database.child("$CHANNELS_REF/$channelId/$SOMEONE_TYPING_REF/$VALUE_REF").setValue(false)
+        }
+
         MessageService.clearMessages()
         messageAdapter.notifyDataSetChanged()
     }
@@ -137,6 +148,7 @@ class MainActivity : AppCompatActivity() {
 
         Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF").addListenerForSingleValueEvent(onLoadingNewChannel)
         Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF").addChildEventListener(onNewMessage)
+        Firebase.database.child("$CHANNELS_REF/$channelId/$SOMEONE_TYPING_REF").addValueEventListener(onSomeoneTypingMessage)
     }
 
     override fun onBackPressed() {
@@ -147,7 +159,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun loginBtnNavClicked() {
+    fun loginBtnNavClicked(view: View) {
         if (App.sharedPrefs.isLoggedIn)
             logOut()
         else
@@ -188,7 +200,7 @@ class MainActivity : AppCompatActivity() {
                     userEmailNavHeader.text = ""
                     userImageNavHeader.setImageResource(R.drawable.profiledefault)
                     userImageNavHeader.setBackgroundColor(Color.TRANSPARENT)
-                    mainChannelName.text = "Please Log In"
+                    mainChannelName.text = resources.getString(R.string.please_log_in)
                     loginBtnNavHeader.text = "Log in"
 
                     Toast.makeText(this,
@@ -198,12 +210,38 @@ class MainActivity : AppCompatActivity() {
                 }
     }
 
+    private val messageTextChangeHandler = object : TextWatcher {
+        override fun afterTextChanged(s: Editable?) {
+        }
+
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+        }
+
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            if (!TextUtils.isEmpty(s.toString()) && s.toString().trim().length == 1)
+                setTypingStatus(true)
+            else if (s.toString().trim().isEmpty() && typingStarted)
+                setTypingStatus(false)
+        }
+
+        private fun setTypingStatus(value: Boolean) {
+            typingStarted = value
+
+            val channelId = selectedChannel?.id.toString()
+
+            Firebase.database.child("$CHANNELS_REF/$channelId/$SOMEONE_TYPING_REF")
+                    .child(USER_ID_REF).setValue(UserDataService.id)
+            Firebase.database.child("$CHANNELS_REF/$channelId/$SOMEONE_TYPING_REF")
+                    .child(VALUE_REF).setValue(value)
+        }
+    }
+
     private val onLoadingNewChannel = object : ValueEventListener {
         override fun onDataChange(dataSnapshot: DataSnapshot) {
-            if (dataSnapshot.exists())
-                messageCountOnLoading = dataSnapshot.childrenCount.toInt()
-            else
+            if (!dataSnapshot.exists()) // no message in this channel, stop showing spinner
                 enableSpinner(false)
+            else
+                messagesLoaded = true
         }
 
         override fun onCancelled(databaseError: DatabaseError) {
@@ -211,8 +249,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private val onNewChannel = object : ChildEventListener
-    {
+    private val onSomeoneTypingMessage = object : ValueEventListener {
+        override fun onDataChange(dataSnapshot: DataSnapshot) {
+            if (!dataSnapshot.exists())
+                return
+
+            if (UserDataService.id != dataSnapshot.child(USER_ID_REF).value)
+            {
+                val someoneElseTyping = dataSnapshot.child(VALUE_REF).value as Boolean
+
+                if (someoneElseTyping)
+                    typingIndicator.text = resources.getString(R.string.someone_is_typing)
+                else
+                    typingIndicator.text = ""
+            }
+        }
+
+        override fun onCancelled(databaseError: DatabaseError) {
+            Log.e("ERROR", "onNewChannel:onCancelled", databaseError.toException())
+        }
+    }
+
+    private val onNewChannel = object : ChildEventListener {
         override fun onChildAdded(dataSnapshot: DataSnapshot, previousChildName: String?) {
             runOnUiThread {
                 val channelId = dataSnapshot.child(ID_REF).value.toString()
@@ -223,10 +281,6 @@ class MainActivity : AppCompatActivity() {
                 drawer_layout.closeDrawer(GravityCompat.START)
                 MessageService.channels.add(newChannel)
                 channelAdapter.notifyDataSetChanged()
-                subscribeChannel(selectedChannel?.id)
-/*
-                changeChannel(MessageService.channels.count() - 1)
-*/
             }
         }
 
@@ -267,11 +321,11 @@ class MainActivity : AppCompatActivity() {
             // to avoid making the closing animation stutter
             // https://stackoverflow.com/questions/18343018/optimizing-drawer-and-activity-launching-speed
             drawerToggle.runWhenIdle(Runnable {
-                if (MessageService.messages.count() == messageCountOnLoading || messageCountOnLoading == -1) {
+                if (messagesLoaded) {
                     messageAdapter.notifyDataSetChanged()
                     messageListView.smoothScrollToPosition(messageAdapter.itemCount - 1)
                     enableSpinner(false)
-                    messageCountOnLoading = -1
+                    messagesLoaded = false
                 }
             })
         }
@@ -335,7 +389,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun sendMessageBtnClicked() {
+    fun sendMessageBtnClicked(view: View) {
         if (App.sharedPrefs.isLoggedIn && messageTextField.text.isNotEmpty() && selectedChannel != null) {
             val channelId = selectedChannel?.id.toString()
             val messagesRef = Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF")

@@ -15,11 +15,13 @@ const val SIGN_IN_REQUEST_CODE = 1
 
 // firebase references
 const val MESSAGES_REF = "messages"
+const val SOMEONE_TYPING_REF = "someoneTyping"
 const val CHANNELS_REF = "channels"
 
 const val ID_REF = "id"
 const val NAME_REF = "name"
 const val DESCRIPTION_REF = "description"
+const val VALUE_REF = "value"
 
 const val MESSAGE_BODY_REF = "messageBody"
 const val USER_ID_REF = "userId"
