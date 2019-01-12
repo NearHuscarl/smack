@@ -11,6 +11,7 @@ import android.widget.TextView
 import com.nearhuscarl.smack.Models.Message
 import com.nearhuscarl.smack.R
 import com.nearhuscarl.smack.Services.UserDataService
+import com.squareup.picasso.Picasso
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -27,7 +28,7 @@ class MessageAdapter(val context: Context, val messages: ArrayList<Message>) : R
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder?.bindMessage(context, messages[position])
+        holder.bindMessage(context, messages[position])
     }
 
     inner class ViewHolder(itemView: View?) : RecyclerView.ViewHolder(itemView) {
@@ -35,6 +36,7 @@ class MessageAdapter(val context: Context, val messages: ArrayList<Message>) : R
         val timeStamp = itemView?.findViewById<TextView>(R.id.timestampLbl)
         val userName = itemView?.findViewById<TextView>(R.id.messageUserNameLbl)
         val messageBody = itemView?.findViewById<TextView>(R.id.messageBodyLbl)
+        val messageImage = itemView?.findViewById<ImageView>(R.id.messageImage)
 
         fun bindMessage(context: Context, message: Message) {
             // TODO: add avatar and remove those lines
@@ -44,22 +46,17 @@ class MessageAdapter(val context: Context, val messages: ArrayList<Message>) : R
 
             userName?.text = message.userName
             timeStamp?.text = getFormattedDate(message.timeStamp)
-            messageBody?.text = message.messageBody
-        }
 
-        private fun returnDateString(isoString: String): String {
-            val isoFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-            isoFormatter.timeZone = TimeZone.getTimeZone("UTC")
-
-            var convertedDate = Date()
-            try {
-                convertedDate = isoFormatter.parse(isoString)
-            } catch (e: ParseException) {
-                Log.d("PARSE", "Cannot parse date")
+            if (message.type == "text")
+            {
+                messageBody?.text = message.messageBody
+                messageImage?.visibility = View.INVISIBLE
             }
-
-            val outDateString = SimpleDateFormat("EEE, h:mm:ss a", Locale.getDefault())
-            return outDateString.format(convertedDate)
+            else
+            {
+                messageBody?.visibility = View.INVISIBLE
+                Picasso.get().load(message.messageBody).placeholder(R.drawable.profiledefault).into(messageImage)
+            }
         }
 
         private fun getFormattedDate(epochTime: String): String {

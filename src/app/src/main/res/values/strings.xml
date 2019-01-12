@@ -12,4 +12,7 @@
     <string name="someone_is_typing">Someone is typing...</string>
     <string name="please_log_in">Please Log In</string>
     <string name="send_message_button">Send message button</string>
+    <string name="chat_message_placeholder">As Squire began examining Eugene, though, he saw that this patient was different from H.M. in some profound ways. Whereas almost everyone knew within minutes of meeting H.M.</string>
+    <string name="username_placeholder">NearHuscarl</string>
+    <string name="message_image">message_image</string>
 </resources>

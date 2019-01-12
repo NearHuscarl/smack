@@ -1,11 +1,10 @@
 package com.nearhuscarl.smack.Controllers
 
 import android.app.Activity
-import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.AlertDialog
@@ -19,15 +18,17 @@ import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import com.firebase.ui.auth.AuthUI
+import com.google.android.gms.tasks.Continuation
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.UploadTask
 import com.nearhuscarl.smack.Adapters.MessageAdapter
 import com.nearhuscarl.smack.Models.Channel
 import com.nearhuscarl.smack.Models.Message
-import com.nearhuscarl.smack.Models.MessagePayload
 import com.nearhuscarl.smack.R
 import com.nearhuscarl.smack.Services.Firebase
 import com.nearhuscarl.smack.Services.MessageService
@@ -86,7 +87,7 @@ class MainActivity : AppCompatActivity()
         Firebase.database.child(CHANNELS_REF).removeEventListener(onNewChannel)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == SIGN_IN_REQUEST_CODE) {
@@ -107,6 +108,10 @@ class MainActivity : AppCompatActivity()
 
                 finish()
             }
+        }
+        else if (requestCode == GALLERY_PICK && resultCode == Activity.RESULT_OK)
+        {
+            sendChatMessageImage(data)
         }
     }
 
@@ -307,13 +312,12 @@ class MainActivity : AppCompatActivity()
 
             if (channelId == selectedChannel?.id) {
                 val id = dataSnapshot.child(ID_REF).value.toString()
+                val type = dataSnapshot.child(TYPE_REF).value.toString()
                 var msgBody = dataSnapshot.child(MESSAGE_BODY_REF).value.toString() // TODO: change back to val
                 val userName = dataSnapshot.child(USER_NAME_REF).value.toString()
                 val avatarUrl = dataSnapshot.child(AVATAR_URL_REF).value.toString()
                 val timeStamp = dataSnapshot.child(TIMESTAMP_REF).value.toString()
-
-                msgBody += "\nAvatar url: $avatarUrl" // TODO: add avatar and remove this line
-                val newMessage = Message(id, msgBody, channelId, userName, avatarUrl, timeStamp)
+                val newMessage = Message(id, type, msgBody, channelId, userName, avatarUrl, timeStamp)
                 MessageService.messages.add(newMessage)
             }
 
@@ -362,7 +366,7 @@ class MainActivity : AppCompatActivity()
         }
     }
 
-    fun addChannelClicked() {
+    fun addChannelClicked(view: View) {
         if (App.sharedPrefs.isLoggedIn) {
             val builder = AlertDialog.Builder(this)
             val dialogView = layoutInflater.inflate(R.layout.add_channel_dialog, null)
@@ -393,24 +397,72 @@ class MainActivity : AppCompatActivity()
         if (App.sharedPrefs.isLoggedIn && messageTextField.text.isNotEmpty() && selectedChannel != null) {
             val channelId = selectedChannel?.id.toString()
             val messagesRef = Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF")
-            val messageId = messagesRef.push().key
+            val messageId = messagesRef.push().key ?: return
+            val messageMap = HashMap<String, Any>()
+            val messageBody = messageTextField.text.toString()
+            val userName = UserDataService.name
+            val serverTimeStamp = Firebase.getServerTimeStamp()
 
-            if (messageId != null) {
-                val messageBody = messageTextField.text.toString()
-                val userName = UserDataService.name
-                val serverTimeStamp = Firebase.GetServerTimeStamp()
+            messageMap[ID_REF] = messageId
+            messageMap[TYPE_REF] = "text"
+            messageMap[MESSAGE_BODY_REF] = messageBody
+            messageMap[CHANNEL_ID_REF] = channelId
+            messageMap[USER_NAME_REF] = userName
+            messageMap[AVATAR_URL_REF] = "https://$userName-avatar-url-link.jpg" // TODO: add avatar
+            messageMap[TIMESTAMP_REF] = serverTimeStamp
 
-                messagesRef.child(messageId).setValue(MessagePayload(
-                        messageId,
-                        messageBody,
-                        channelId,
-                        userName,
-                        "https://$userName-avatar-url-link.jpg", // TODO: add avatar
-                        serverTimeStamp
-                ))
+            messagesRef.child(messageId).setValue(messageMap)
 
-                messageTextField.text.clear()
-                hideKeyboard()
+            messageTextField.text.clear()
+            hideKeyboard()
+        }
+    }
+
+    fun addImageBtnClicked(view: View) {
+        val galleryIntent = Intent()
+
+        galleryIntent.type = "image/*"
+        galleryIntent.action = Intent.ACTION_GET_CONTENT
+
+        startActivityForResult(Intent.createChooser(galleryIntent, "SELECT IMAGE"), GALLERY_PICK)
+    }
+
+    private fun sendChatMessageImage(data: Intent?) {
+        if (App.sharedPrefs.isLoggedIn && selectedChannel != null) {
+            if (data == null)
+                return
+
+            val imageUri = data.data
+            val channelId = selectedChannel?.id.toString()
+            val messagesRef = Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF")
+            val messageId = messagesRef.push().key ?: return
+            val imageUploadPathRef = Firebase.storage.child(MESSAGE_IMAGE_REF).child("$messageId.jpg")
+
+            imageUploadPathRef.putFile(imageUri).continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    throw task.exception!!
+                }
+                imageUploadPathRef.downloadUrl
+            }.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val downloadUrl = task.result.toString()
+                    val messageMap = HashMap<String, Any>()
+                    val userName = UserDataService.name
+                    val serverTimeStamp = Firebase.getServerTimeStamp()
+
+                    messageMap[ID_REF] = messageId
+                    messageMap[TYPE_REF] = "image"
+                    messageMap[MESSAGE_BODY_REF] = downloadUrl
+                    messageMap[CHANNEL_ID_REF] = channelId
+                    messageMap[USER_NAME_REF] = userName
+                    messageMap[AVATAR_URL_REF] = "https://$userName-avatar-url-link.jpg" // TODO: add avatar
+                    messageMap[TIMESTAMP_REF] = serverTimeStamp
+
+                    messagesRef.child(messageId).setValue(messageMap)
+
+                    messageTextField.text.clear()
+                    hideKeyboard()
+                }
             }
         }
     }
