@@ -8,59 +8,26 @@
     <ImageView
             android:layout_width="40dp"
             android:layout_height="40dp" tools:srcCompat="@drawable/dark19"
-            android:id="@+id/messageUserImage"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="8dp"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="8dp"/>
-
+            android:id="@+id/messageUserImage" app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
+            app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="8dp"/>
     <TextView
-        android:id="@+id/messageUserNameLbl"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:textColor="@color/colorPrimaryDark"
-        android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/messageUserImage"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="@string/username_placeholder" />
-
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/messageUserNameLbl" tools:text="NearHuscarl" app:layout_constraintStart_toEndOf="@+id/messageUserImage"
+            android:layout_marginStart="8dp" app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="8dp"/>
     <TextView
-        android:id="@+id/timestampLbl"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:textColor="@android:color/darker_gray"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="@+id/messageUserNameLbl"
-        app:layout_constraintStart_toEndOf="@+id/messageUserNameLbl"
-        tools:text="Sep 04, 06:58 pm" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/timestampLbl" tools:text="Sep 04, 06:58 pm"
+            app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="8dp"
+            app:layout_constraintStart_toEndOf="@+id/messageUserNameLbl" android:layout_marginStart="8dp"/>
     <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:id="@+id/messageBodyLbl"
-            tools:text="@string/chat_message_placeholder"
+            tools:text="As Squire began examining Eugene, though, he saw that this patient was different from H.M. in some profound ways. Whereas almost everyone knew within minutes of meeting H.M. that something was amiss, Eugene could carry on conversations and perform tasks that wouldn’t alert a casual observer that anything was wrong. The effects of H.M.’s surgery had been so debilitating that he was institutionalized for the remainder of his life. Eugene, on the other hand, lived at home with his wife. H.M. couldn’t really carry on conversations. Eugene, in contrast, had an amazing knack for guiding almost any discussion to a topic he was comfortable talking about at length, such as satellites—he had worked as a technician for an aerospace company—or the weather. "
             app:layout_constraintStart_toEndOf="@+id/messageUserImage" android:layout_marginStart="8dp"
             android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/timestampLbl"
             app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
             app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="8dp"/>
-
-    <ImageView
-        android:id="@+id/messageImage"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:adjustViewBounds="true"
-        android:contentDescription="@string/message_image"
-        android:cropToPadding="true"
-        android:scaleType="centerCrop"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/messageBodyLbl"
-        app:layout_constraintStart_toEndOf="@+id/messageUserImage"
-        app:layout_constraintTop_toBottomOf="@+id/messageUserNameLbl"
-        tools:srcCompat="@drawable/download" />
 </android.support.constraint.ConstraintLayout>

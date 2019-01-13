@@ -1,91 +1,146 @@
 package com.nearhuscarl.smack.Controllers
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.support.v4.content.LocalBroadcastManager
+import android.util.Log
 import android.view.View
 import android.widget.Toast
+import com.google.android.gms.tasks.OnCanceledListener
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthSettings
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.nearhuscarl.smack.Models.User
 import com.nearhuscarl.smack.R
 import com.nearhuscarl.smack.Services.AuthService
+import com.nearhuscarl.smack.Services.Firebase
 import com.nearhuscarl.smack.Services.UserDataService
 import com.nearhuscarl.smack.Utilities.BROADCAST_USER_DATA_CHANGE
 import kotlinx.android.synthetic.main.activity_create_user.*
+import kotlinx.android.synthetic.main.notification_template_lines_media.view.*
 import java.util.*
+import kotlin.collections.HashMap
 
 class CreateUserActivity : AppCompatActivity() {
 
-    var userAvatar = "profileDefault"
-    var avatarColor = "[0.5, 0.5, 0.5, 1]"
+    lateinit var mAuth: FirebaseAuth
+    lateinit var mData: DatabaseReference
+    lateinit var mStorage: FirebaseStorage
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        mStorage = FirebaseStorage.getInstance()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_user)
+
+        returnLoginBtn.setOnClickListener {
+            val loginIntent = Intent(applicationContext, LoginActivity::class.java)
+            startActivity(loginIntent)
+            finish()
+        }
+
+        selectphoto_button_register.setOnClickListener {
+            Log.d("CreateUserActivity", "Try to show photo selector")
+
+            val intent = Intent(Intent.ACTION_PICK)
+            intent.type = "image/*"
+            startActivityForResult(intent, 0)
+        }
 
         createSpinner.visibility = View.INVISIBLE
     }
 
-    fun generateUserAvatar(view: View) {
-        val random = Random()
-        val color = random.nextInt(2)
-        val avatar = random.nextInt(28)
+    var selectedPhotoUri: Uri? = null
 
-        if (color == 0)
-            userAvatar = "light$avatar"
-        else
-            userAvatar = "dark$avatar"
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
 
-        val resourceId = resources.getIdentifier(userAvatar, "drawable", packageName)
-        createAvatarImageView.setImageResource(resourceId)
+        if (requestCode == 0 && resultCode == Activity.RESULT_OK && data != null) {
+            Log.d("Activity_create_uri", "Photo was selected")
+
+            selectedPhotoUri = data.data
+
+            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, selectedPhotoUri)
+
+            selectphoto_imageview_register.setImageBitmap(bitmap)
+
+            selectphoto_button_register.alpha = 0f
+        }
     }
 
-    fun generateColorClicked(view: View) {
-        val random = Random()
-        val r = random.nextInt(256)
-        val g = random.nextInt(256)
-        val b = random.nextInt(256)
+    private fun uploadImageToFirebaseStorage() {
+        if (selectedPhotoUri == null) return
 
-        createAvatarImageView.setBackgroundColor(Color.rgb(r,g,b))
+        val filename = UUID.randomUUID().toString()
+        val ref = FirebaseStorage.getInstance().getReference("/images/$filename")
 
-        val savedR = r.toDouble() / 255
-        val savedG = g.toDouble() / 255
-        val savedB = b.toDouble() / 255
+        ref.putFile(selectedPhotoUri!!)
+                .addOnSuccessListener {
+                    Log.d(null, "Successfully uploaded image: ${it.metadata?.path}")
 
-        avatarColor = "[$savedR, $savedG, $savedB, 1]"
+                    ref.downloadUrl.addOnSuccessListener {
+                        Log.d(null, "File Location: $it")
+
+                        saveUserToFirebaseDatabase(it.toString())
+                    }
+                }
+                .addOnFailureListener {
+                    Log.d(null, "Failed to upload image to storage: ${it.message}")
+                }
+    }
+
+    private fun saveUserToFirebaseDatabase(profileImageUrl: String) {
+
+        val userName = createUserNameTxt.text.toString().trim()
+        val uid = FirebaseAuth.getInstance().uid ?: ""
+        val ref = FirebaseDatabase.getInstance().getReference("/users/$uid")
+
+        val user = User(userName, profileImageUrl)
+
+        ref.setValue(user)
+                .addOnSuccessListener {
+                    Log.d("CreateUserActivity", "Finally we saved the user to Firebase Database")
+                    val Intent = Intent(applicationContext, LoginActivity::class.java)
+                    startActivity(Intent)
+                    finish()
+                }
+                .addOnFailureListener {
+                    Log.d("CreateUserActivity", "Failed to set value to database: ${it.message}")
+                }
     }
 
     fun createUserClicked(view: View) {
-        enableSpinner(true)
 
-        val userName = createUserNameTxt.text.toString()
-        val password = createPasswordTxt.text.toString()
-        val email = createEmailTxt.text.toString()
+        mAuth = FirebaseAuth.getInstance()
+        mData = FirebaseDatabase.getInstance().getReference("Users")
 
-        if (userName.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()) {
-            AuthService.registerUser(email, password) { registerSuccess ->
-                if (registerSuccess) {
-                    AuthService.loginUser(email, password) { loginSuccess ->
-                        if (loginSuccess) {
-                            AuthService.createUser(userName, email, userAvatar, avatarColor) { createSuccess ->
-                                if (createSuccess) {
-                                    val userDataChange = Intent(BROADCAST_USER_DATA_CHANGE)
-                                    LocalBroadcastManager.getInstance(this).sendBroadcast(userDataChange)
+        val userName = createUserNameTxt.text.toString().trim()
+        val password = createPasswordTxt.text.toString().trim()
+        val email = createEmailTxt.text.toString().trim()
+        val profile = selectphoto_imageview_register.text.toString().trim()
 
-                                    enableSpinner(false)
-                                    finish()
-                                } else {
-                                    errorToast()
-                                }
-                            }
-                        } else {
-                            errorToast()
-                        }
+
+        if (userName.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty() && profile.isNotEmpty()) {
+            FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener {
+                        if (!it.isSuccessful) return@addOnCompleteListener
+                        uploadImageToFirebaseStorage()
+                        enableSpinner(true)
+                        Log.d(null, "Successfully created user with uid: ${it.result.user.uid}")
+                        Toast.makeText(this,"Successfully Sign up, please log in. ", Toast.LENGTH_LONG).show()
                     }
-                } else {
-                    errorToast()
-                }
-            }
+                    .addOnFailureListener{
+                        Log.d(null, "Failed to create user: ${it.message}")
+                        Toast.makeText(this, "Failed to create user: ${it.message}", Toast.LENGTH_SHORT).show()
+                    }
         } else {
             errorToast("Make sure username, email and password are filled in.")
         }
@@ -104,7 +159,5 @@ class CreateUserActivity : AppCompatActivity() {
         }
 
         createUserBtn.isEnabled = !enable
-        createAvatarImageView.isEnabled = !enable
-        backgroundColorBtn.isEnabled = !enable
     }
 }

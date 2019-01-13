@@ -14,6 +14,6 @@ class App : Application() {
         super.onCreate()
 
         sharedPrefs = SharedPrefs(applicationContext)
-        Firebase.initialize()
+        Firebase.Initialize()
     }
 }
