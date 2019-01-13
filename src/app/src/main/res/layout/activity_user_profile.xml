@@ -42,7 +42,7 @@
         app:srcCompat="@drawable/job" />
 
     <TextView
-        android:id="@+id/jobEditText"
+        android:id="@+id/jobTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -113,7 +113,7 @@
         app:srcCompat="@drawable/birthday" />
 
     <TextView
-        android:id="@+id/emailEditText"
+        android:id="@+id/emailTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -123,7 +123,7 @@
         tools:text="abc12345@gmail.com" />
 
     <TextView
-        android:id="@+id/phoneEditText"
+        android:id="@+id/phoneTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -145,7 +145,7 @@
         tools:text="Male" />
 
     <TextView
-        android:id="@+id/birthdayEditText"
+        android:id="@+id/birthdayTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -186,7 +186,7 @@
         android:paddingTop="0dp"
         android:paddingRight="15dp"
         android:paddingBottom="0dp"
-        android:text="SEND FRIEND REQUEST"
+        android:text="@string/send_friend_request"
         android:textColor="@android:color/white"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"

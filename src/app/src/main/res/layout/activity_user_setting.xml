@@ -24,7 +24,7 @@
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/jobEditText" />
+        app:layout_constraintTop_toBottomOf="@+id/jobTextView" />
 
     <ImageView
         android:id="@+id/avatarImageView"
@@ -63,7 +63,7 @@
         app:srcCompat="@drawable/job" />
 
     <EditText
-        android:id="@+id/jobEditText"
+        android:id="@+id/jobTextView"
         android:layout_width="210dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -139,7 +139,7 @@
         app:srcCompat="@drawable/gender" />
 
     <EditText
-        android:id="@+id/emailEditText"
+        android:id="@+id/emailTextView"
         android:layout_width="210dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -151,7 +151,7 @@
         tools:text="abc12345@gmail.com" />
 
     <EditText
-        android:id="@+id/phoneEditText"
+        android:id="@+id/phoneTextView"
         android:layout_width="210dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -165,7 +165,7 @@
         tools:text="0914349929" />
 
     <EditText
-        android:id="@+id/birthdayEditText"
+        android:id="@+id/birthdayTextView"
         android:layout_width="210dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -184,7 +184,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="@+id/phoneEditText"
+        app:layout_constraintEnd_toEndOf="@+id/phoneTextView"
         app:layout_constraintStart_toEndOf="@+id/genderImageView"
         app:layout_constraintTop_toBottomOf="@+id/phoneImageView">
 

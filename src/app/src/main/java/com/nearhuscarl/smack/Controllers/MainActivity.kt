@@ -26,6 +26,8 @@ import com.nearhuscarl.smack.Adapters.MessageAdapter
 import com.nearhuscarl.smack.Models.Channel
 import com.nearhuscarl.smack.Models.Message
 import com.nearhuscarl.smack.R
+import com.nearhuscarl.smack.RecyclerItemClickListener
+import com.nearhuscarl.smack.RecyclerTouchListener
 import com.nearhuscarl.smack.Services.Firebase
 import com.nearhuscarl.smack.Services.MessageService
 import com.nearhuscarl.smack.Services.UserDataService
@@ -34,6 +36,7 @@ import com.nearhuscarl.smack.Utilities.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.android.synthetic.main.message_list_view.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -69,6 +72,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         messageTextField.addTextChangedListener(messageTextChangeHandler)
+        messageRecycleView.addOnItemTouchListener(object: RecyclerTouchListener(
+                this, messageRecycleView, onChatMessageClick) {})
 
         logIn()
     }
@@ -107,9 +112,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun resetMessageAdapter() {
         messageAdapter = MessageAdapter(this, MessageService.messages)
-        messageListView.adapter = messageAdapter
+        messageRecycleView.adapter = messageAdapter
         val layoutManager = LinearLayoutManager(this)
-        messageListView.layoutManager = layoutManager
+        messageRecycleView.layoutManager = layoutManager
     }
 
     private fun displayChatMessagesAtStartup(id: String?, name: String?, email: String?) {
@@ -308,9 +313,10 @@ class MainActivity : AppCompatActivity() {
                 val type = dataSnapshot.child(TYPE_REF).value.toString()
                 val msgBody = dataSnapshot.child(MESSAGE_BODY_REF).value.toString()
                 val userName = dataSnapshot.child(USER_NAME_REF).value.toString()
+                val userId = dataSnapshot.child(USER_ID_REF).value.toString()
                 val avatarUrl = dataSnapshot.child(AVATAR_URL_REF).value.toString()
                 val timeStamp = dataSnapshot.child(TIMESTAMP_REF).value.toString()
-                val newMessage = Message(id, type, msgBody, channelId, userName, avatarUrl, timeStamp)
+                val newMessage = Message(id, type, msgBody, channelId, userId, userName, avatarUrl, timeStamp)
                 MessageService.messages.add(newMessage)
             }
 
@@ -328,7 +334,7 @@ class MainActivity : AppCompatActivity() {
 
         private fun updateChatMessage(dataSnapshot: DataSnapshot) {
             messageAdapter.notifyDataSetChanged()
-            messageListView.smoothScrollToPosition(messageAdapter.itemCount - 1)
+            messageRecycleView.smoothScrollToPosition(messageAdapter.itemCount - 1)
             enableSpinner(false)
         }
 
@@ -399,6 +405,7 @@ class MainActivity : AppCompatActivity() {
             val messageId = messagesRef.push().key ?: return
             val messageMap = HashMap<String, Any>()
             val messageBody = messageTextField.text.toString()
+            val userId = UserDataService.id
             val userName = UserDataService.name
             val serverTimeStamp = Firebase.getServerTimeStamp()
 
@@ -406,6 +413,7 @@ class MainActivity : AppCompatActivity() {
             messageMap[TYPE_REF] = "text"
             messageMap[MESSAGE_BODY_REF] = messageBody
             messageMap[CHANNEL_ID_REF] = channelId
+            messageMap[USER_ID_REF] = userId
             messageMap[USER_NAME_REF] = userName
             messageMap[AVATAR_URL_REF] = "https://$userName-avatar-url-link.jpg" // TODO: add avatar
             messageMap[TIMESTAMP_REF] = serverTimeStamp
@@ -447,6 +455,7 @@ class MainActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     val downloadUrl = task.result.toString()
                     val messageMap = HashMap<String, Any>()
+                    val userId = UserDataService.id
                     val userName = UserDataService.name
                     val serverTimeStamp = Firebase.getServerTimeStamp()
 
@@ -454,6 +463,7 @@ class MainActivity : AppCompatActivity() {
                     messageMap[TYPE_REF] = "image"
                     messageMap[MESSAGE_BODY_REF] = downloadUrl
                     messageMap[CHANNEL_ID_REF] = channelId
+                    messageMap[USER_ID_REF] = userId
                     messageMap[USER_NAME_REF] = userName
                     messageMap[AVATAR_URL_REF] = "https://$userName-avatar-url-link.jpg" // TODO: add avatar
                     messageMap[TIMESTAMP_REF] = serverTimeStamp
@@ -468,20 +478,41 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun userImageNavHeaderClicked(view: View) {
-        startChangeUserSettingActivity()
+        startUserSettingActivity()
     }
 
     fun userNameNavHeaderClicked(view: View) {
-        startChangeUserSettingActivity()
+        startUserSettingActivity()
     }
 
     fun userEmailNavHeaderClicked(view: View) {
-        startChangeUserSettingActivity()
+        startUserSettingActivity()
     }
 
-    private fun startChangeUserSettingActivity() {
+    private fun startUserSettingActivity() {
         val intent = Intent(this, UserSettingActivity::class.java)
         startActivity(intent)
+    }
+
+    private fun startUserProfileActivity(position: Int) {
+        val intent = Intent(this, UserProfileActivity::class.java)
+
+        intent.putExtra(USER_ID_REF, messageAdapter.messages[position].userId)
+        startActivity(intent)
+    }
+
+    private val onChatMessageClick = object: RecyclerItemClickListener {
+        override fun onClick(view: View, position: Int) {
+            val userAvatarImageView = view.findViewById<ImageView>(R.id.messageUserImage)
+
+            userAvatarImageView.setOnClickListener{ _ ->
+                startUserProfileActivity(position)
+            }
+        }
+
+        override fun onLongClick(view: View, position: Int) {
+        }
+
     }
 
     private fun hideKeyboard() {

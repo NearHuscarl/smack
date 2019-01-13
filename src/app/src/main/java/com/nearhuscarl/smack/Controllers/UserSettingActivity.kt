@@ -29,8 +29,8 @@ class UserSettingActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_setting)
-        birthdayEditText.keyListener = null
-        birthdayEditText.onFocusChangeListener = onBirthdayFocusChange
+        birthdayTextView.keyListener = null
+        birthdayTextView.onFocusChangeListener = onBirthdayFocusChange
 
         val userRef = Firebase.database.child("$USERS_REF/${UserDataService.id}")
 
@@ -56,17 +56,17 @@ class UserSettingActivity : AppCompatActivity() {
                     .into(avatarImageView)
 
             displayNameTextView.text = name
-            emailEditText.setText(email)
-            phoneEditText.setText(phone)
+            emailTextView.setText(email)
+            phoneTextView.setText(phone)
 
-            if (gender == "male")
+            if (gender == "Male")
                 maleRadioBtn.isChecked = true
-            else if (gender == "female")
+            else if (gender == "Female")
                 femaleRadioBtn.isChecked = true
 
-            birthdayEditText.setText(birthday)
+            birthdayTextView.setText(birthday)
             locationEditText.setText(location)
-            jobEditText.setText(job)
+            jobTextView.setText(job)
         }
 
         override fun onCancelled(databaseError: DatabaseError) {
@@ -98,18 +98,18 @@ class UserSettingActivity : AppCompatActivity() {
 
     private fun updateSetting() {
         val name = displayNameTextView.text.toString()
-        val email = emailEditText.text.toString()
-        val phone = phoneEditText.text.toString()
+        val email = emailTextView.text.toString()
+        val phone = phoneTextView.text.toString()
 
         var gender = ""
         if (maleRadioBtn.isChecked)
-            gender = "male"
+            gender = "Male"
         else if (femaleRadioBtn.isChecked)
-            gender = "female"
+            gender = "Female"
 
-        val birthday = birthdayEditText.text.toString()
+        val birthday = birthdayTextView.text.toString()
         val location = locationEditText.text.toString()
-        val job = jobEditText.text.toString()
+        val job = jobTextView.text.toString()
         val userSettingMap = HashMap<String, Any>()
 
 
@@ -164,7 +164,7 @@ class UserSettingActivity : AppCompatActivity() {
     }
 
     fun birthdayTextViewClicked(view: View) {
-        if (birthdayEditText.isFocused) {
+        if (birthdayTextView.isFocused) {
             openBirthdayDialog()
         }
     }
@@ -181,7 +181,7 @@ class UserSettingActivity : AppCompatActivity() {
     }
 
     private val birthdayPickerListen = DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
-        birthdayEditText.setText("$dayOfMonth/${month+1}/$year")
+        birthdayTextView.setText("$dayOfMonth/${month+1}/$year")
     }
 
     private fun enableSpinner(enable: Boolean) {

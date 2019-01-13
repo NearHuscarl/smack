@@ -16,4 +16,5 @@
     <string name="username_placeholder">NearHuscarl</string>
     <string name="message_image">message_image</string>
     <string name="title_activity_user_profile">UserProfileActivity</string>
+    <string name="send_friend_request">SEND FRIEND REQUEST</string>
 </resources>
