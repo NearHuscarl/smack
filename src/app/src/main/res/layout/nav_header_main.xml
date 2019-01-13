@@ -16,6 +16,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:contentDescription="@string/nav_header_desc"
+        android:onClick="userImageNavHeaderClicked"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
         app:layout_constraintBottom_toTopOf="@+id/loginBtnNavHeader"
         app:layout_constraintEnd_toEndOf="@+id/loginBtnNavHeader"
@@ -23,23 +24,26 @@
         app:srcCompat="@drawable/profiledefault" />
 
     <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="@dimen/nav_header_vertical_spacing"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-            android:id="@+id/userNameNavHeader"
-            tools:text="Near Huscarl"
-            app:layout_constraintTop_toTopOf="@+id/userImageNavHeader" app:layout_constraintStart_toEndOf="@+id/userImageNavHeader"
-            android:layout_marginStart="8dp"/>
+        android:id="@+id/userNameNavHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:onClick="userNameNavHeaderClicked"
+        android:paddingTop="@dimen/nav_header_vertical_spacing"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        app:layout_constraintStart_toEndOf="@+id/userImageNavHeader"
+        app:layout_constraintTop_toTopOf="@+id/userImageNavHeader"
+        tools:text="Near Huscarl" />
 
     <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/userEmailNavHeader"
-            tools:text="near.huscarl@gmail.com"
-            app:layout_constraintTop_toBottomOf="@+id/userNameNavHeader"
-            app:layout_constraintStart_toEndOf="@+id/userImageNavHeader"
-            android:layout_marginStart="8dp"/>
+        android:id="@+id/userEmailNavHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:onClick="userEmailNavHeaderClicked"
+        app:layout_constraintStart_toEndOf="@+id/userImageNavHeader"
+        app:layout_constraintTop_toBottomOf="@+id/userNameNavHeader"
+        tools:text="near.huscarl@gmail.com" />
 
     <Button
         android:id="@+id/loginBtnNavHeader"

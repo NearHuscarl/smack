@@ -4,13 +4,34 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Controllers.UserProfileActivity">
+    tools:context=".Controllers.UserSettingActivity">
+
+    <Button
+        android:id="@+id/saveSettingBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:background="@color/colorAccent"
+        android:onClick="saveSettingBtnClicked"
+        android:paddingLeft="15dp"
+        android:paddingTop="0dp"
+        android:paddingRight="15dp"
+        android:paddingBottom="0dp"
+        android:text="SAVE SETTING"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/jobEditText" />
 
     <ImageView
         android:id="@+id/avatarImageView"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
+        android:onClick="avatarImageViewClicked"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -21,7 +42,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
         android:textColor="@color/colorAccent"
         android:textSize="22sp"
@@ -41,25 +62,40 @@
         app:layout_constraintTop_toBottomOf="@+id/locationImageView"
         app:srcCompat="@drawable/job" />
 
-    <TextView
+    <EditText
         android:id="@+id/jobEditText"
-        android:layout_width="wrap_content"
+        android:layout_width="210dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:hint="Software Engineer"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="@+id/jobImageView"
         app:layout_constraintStart_toEndOf="@+id/jobImageView"
         app:layout_constraintTop_toTopOf="@+id/jobImageView"
-        tools:text="Cai win dao" />
+        tools:text="Software Engineer" />
+
+    <EditText
+        android:id="@+id/locationEditText"
+        android:layout_width="210dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:hint="TP Hồ Chí Minh, Thủ Đức"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="@+id/locationImageView"
+        app:layout_constraintStart_toEndOf="@+id/locationImageView"
+        app:layout_constraintTop_toTopOf="@+id/locationImageView"
+        tools:text="TP Hồ Chí Minh, Thủ Đức" />
 
     <ImageView
         android:id="@+id/emailImageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="64dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:tint="@color/colorAccent"
+        android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sendFriendRequestBtn"
+        app:layout_constraintTop_toBottomOf="@+id/displayNameTextView"
         app:srcCompat="@drawable/email" />
 
     <ImageView
@@ -71,26 +107,6 @@
         app:layout_constraintStart_toStartOf="@+id/emailImageView"
         app:layout_constraintTop_toBottomOf="@+id/emailImageView"
         app:srcCompat="@drawable/phone" />
-
-    <ImageView
-        android:id="@+id/genderImageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:tint="@color/colorAccent"
-        app:layout_constraintStart_toStartOf="@+id/phoneImageView"
-        app:layout_constraintTop_toBottomOf="@+id/phoneImageView"
-        app:srcCompat="@drawable/gender" />
-
-    <ImageView
-        android:id="@+id/registerDateImageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:tint="@color/colorAccent"
-        app:layout_constraintStart_toStartOf="@+id/jobImageView"
-        app:layout_constraintTop_toBottomOf="@+id/jobImageView"
-        app:srcCompat="@drawable/calendar" />
 
     <ImageView
         android:id="@+id/locationImageView"
@@ -109,87 +125,96 @@
         android:layout_marginTop="8dp"
         android:tint="@color/colorAccent"
         app:layout_constraintStart_toStartOf="@+id/genderImageView"
-        app:layout_constraintTop_toBottomOf="@+id/genderImageView"
+        app:layout_constraintTop_toBottomOf="@+id/genderRadioGroup"
         app:srcCompat="@drawable/birthday" />
 
-    <TextView
-        android:id="@+id/emailEditText"
+    <ImageView
+        android:id="@+id/genderImageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:tint="@color/colorAccent"
+        app:layout_constraintStart_toStartOf="@+id/phoneImageView"
+        app:layout_constraintTop_toBottomOf="@+id/phoneImageView"
+        app:srcCompat="@drawable/gender" />
+
+    <EditText
+        android:id="@+id/emailEditText"
+        android:layout_width="210dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:hint="abc12345@gmail.com"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="@+id/emailImageView"
         app:layout_constraintStart_toEndOf="@+id/emailImageView"
         app:layout_constraintTop_toTopOf="@+id/emailImageView"
         tools:text="abc12345@gmail.com" />
 
-    <TextView
+    <EditText
         android:id="@+id/phoneEditText"
-        android:layout_width="wrap_content"
+        android:layout_width="210dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:hint="0914349929"
+        android:inputType="phone"
+        android:digits="0123456789+"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="@+id/phoneImageView"
         app:layout_constraintStart_toEndOf="@+id/phoneImageView"
         app:layout_constraintTop_toTopOf="@+id/phoneImageView"
         tools:text="0914349929" />
 
-    <TextView
-        android:id="@+id/genderTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toBottomOf="@+id/genderImageView"
-        app:layout_constraintStart_toEndOf="@+id/genderImageView"
-        app:layout_constraintTop_toBottomOf="@+id/phoneImageView"
-        app:layout_constraintVertical_bias="1.0"
-        tools:text="Male" />
-
-    <TextView
+    <EditText
         android:id="@+id/birthdayEditText"
-        android:layout_width="wrap_content"
+        android:layout_width="210dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:hint="24/12/1996"
+        android:onClick="birthdayTextViewClicked"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="@+id/birthdayImageView"
         app:layout_constraintStart_toEndOf="@+id/birthdayImageView"
         app:layout_constraintTop_toTopOf="@+id/birthdayImageView"
-        tools:text="19/01/1997" />
+        tools:text="24/12/1996" />
 
-    <TextView
-        android:id="@+id/registerDateTextView"
-        android:layout_width="wrap_content"
+    <RadioGroup
+        android:id="@+id/genderRadioGroup"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        app:layout_constraintBottom_toBottomOf="@+id/registerDateImageView"
-        app:layout_constraintStart_toEndOf="@+id/registerDateImageView"
-        app:layout_constraintTop_toTopOf="@+id/registerDateImageView"
-        tools:text="24/12/2018" />
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="@+id/phoneEditText"
+        app:layout_constraintStart_toEndOf="@+id/genderImageView"
+        app:layout_constraintTop_toBottomOf="@+id/phoneImageView">
 
-    <TextView
-        android:id="@+id/locationTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="19dp"
-        android:layout_marginStart="8dp"
-        app:layout_constraintBottom_toBottomOf="@+id/locationImageView"
-        app:layout_constraintStart_toEndOf="@+id/locationImageView"
-        app:layout_constraintTop_toTopOf="@+id/locationImageView"
-        tools:text="Long An, Tan An city" />
+        <RadioButton
+            android:id="@+id/maleRadioBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Male" />
 
-    <Button
-        android:id="@+id/sendFriendRequestBtn"
+        <RadioButton
+            android:id="@+id/femaleRadioBtn"
+            android:layout_width="49dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Female" />
+    </RadioGroup>
+
+
+    <ProgressBar
+        android:id="@+id/spinner"
+        style="?android:attr/progressBarStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="8dp"
-        android:background="@color/colorAccent"
-        android:paddingLeft="15dp"
-        android:paddingTop="0dp"
-        android:paddingRight="15dp"
-        android:paddingBottom="0dp"
-        android:text="SEND FRIEND REQUEST"
-        android:textColor="@android:color/white"
-        android:textStyle="bold"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/avatarImageView"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/displayNameTextView" />
+        app:layout_constraintTop_toTopOf="@+id/avatarImageView"
+        tools:visibility="visible" />
+
 </android.support.constraint.ConstraintLayout>

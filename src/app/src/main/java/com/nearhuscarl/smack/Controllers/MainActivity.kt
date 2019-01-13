@@ -437,7 +437,7 @@ class MainActivity : AppCompatActivity() {
             val channelId = selectedChannel?.id.toString()
             val messagesRef = Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF")
             val messageId = messagesRef.push().key ?: return
-            val imageUploadPathRef = Firebase.storage.child(MESSAGE_IMAGE_REF).child("$messageId.jpg")
+            val imageUploadPathRef = Firebase.storage.child(MESSAGE_IMAGES_REF).child("$messageId.jpg")
 
             imageUploadPathRef.putFile(imageUri).continueWithTask { task ->
                 if (!task.isSuccessful)
@@ -467,6 +467,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun userImageNavHeaderClicked(view: View) {
+        startChangeUserSettingActivity()
+    }
+
+    fun userNameNavHeaderClicked(view: View) {
+        startChangeUserSettingActivity()
+    }
+
+    fun userEmailNavHeaderClicked(view: View) {
+        startChangeUserSettingActivity()
+    }
+
+    private fun startChangeUserSettingActivity() {
+        val intent = Intent(this, UserSettingActivity::class.java)
+        startActivity(intent)
+    }
+
     private fun hideKeyboard() {
         val inputManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
 
@@ -475,11 +492,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun enableSpinner(enable: Boolean) {
-        if (enable) {
+    private fun enableSpinner(enable: Boolean) {
+        if (enable)
             spinner.visibility = View.VISIBLE
-        } else {
+        else
             spinner.visibility = View.INVISIBLE
-        }
     }
 }

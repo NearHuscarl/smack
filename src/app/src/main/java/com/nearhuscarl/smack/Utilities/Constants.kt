@@ -13,12 +13,22 @@ const val SIGN_IN_REQUEST_CODE = 1
 const val GALLERY_PICK = 2
 
 // firebase references
+const val USERS_REF = "users"
 const val MESSAGES_REF = "messages"
 const val SOMEONE_TYPING_REF = "someoneTyping"
 const val CHANNELS_REF = "channels"
-const val MESSAGE_IMAGE_REF = "messageImages"
+
+const val MESSAGE_IMAGES_REF = "messageImages"
+const val USER_AVATARS_REF = "userAvatars"
 
 const val ID_REF = "id"
+const val AVATAR_REF = "avatar"
+const val EMAIL_REF = "email"
+const val PHONE_REF = "phone"
+const val GENDER_REF = "gender"
+const val BIRTHDAY_REF = "birthday"
+const val LOCATION_REF = "location"
+const val JOB_REF = "job"
 const val TYPE_REF = "type"
 const val NAME_REF = "name"
 const val DESCRIPTION_REF = "description"
