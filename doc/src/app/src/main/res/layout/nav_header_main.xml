@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+        android:layout_height="@dimen/nav_header_height"
+        android:background="@color/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark"
+        android:gravity="bottom" android:id="@+id/linearLayout" tools:layout_editor_absoluteY="81dp">
+
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/userImageNavHeader"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        app:civ_border_width="2dp"
+        app:layout_constraintBottom_toTopOf="@+id/loginBtnNavHeader"
+        app:layout_constraintEnd_toEndOf="@+id/loginBtnNavHeader"
+        app:layout_constraintStart_toStartOf="@+id/loginBtnNavHeader"
+        app:srcCompat="@drawable/profiledefault" />
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/nav_header_vertical_spacing"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:id="@+id/userNameNavHeader"
+            tools:text="Near Huscarl"
+            app:layout_constraintTop_toTopOf="@+id/userImageNavHeader" app:layout_constraintStart_toEndOf="@+id/userImageNavHeader"
+            android:layout_marginStart="8dp"/>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/userEmailNavHeader"
+            tools:text="near.huscarl@gmail.com"
+            app:layout_constraintTop_toBottomOf="@+id/userNameNavHeader"
+            app:layout_constraintStart_toEndOf="@+id/userImageNavHeader"
+            android:layout_marginStart="8dp"/>
+
+    <Button
+        android:id="@+id/loginBtnNavHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@android:color/transparent"
+        android:onClick="loginBtnNavClicked"
+        android:text="@string/login"
+        android:textAlignment="center"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageButton
+            android:layout_width="30dp"
+            android:layout_height="30dp" app:srcCompat="@drawable/addchannelbutton"
+            android:id="@+id/addChannelBtn"
+            android:background="@android:color/transparent" android:scaleType="fitXY" android:padding="5dp"
+            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
+            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="8dp"
+            android:onClick="addChannelClicked" android:contentDescription="@string/add_channel_image_button"/>
+
+</android.support.constraint.ConstraintLayout>
