@@ -48,11 +48,13 @@ class MessageAdapter(val context: Context, val messages: ArrayList<Message>) : R
             if (message.type == "text")
             {
                 messageBody?.text = message.messageBody
-                messageImage?.visibility = View.INVISIBLE
+                messageBody?.visibility = View.VISIBLE
+                messageImage?.visibility = View.GONE
             }
             else
             {
-                messageBody?.visibility = View.INVISIBLE
+                messageBody?.visibility = View.GONE
+                messageImage?.visibility = View.VISIBLE
                 Picasso.get()
                         .load(message.messageBody)
                         .resize(400, 0)

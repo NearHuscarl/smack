@@ -445,25 +445,23 @@ class MainActivity : AppCompatActivity() {
                 imageUploadPathRef.downloadUrl
             }.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    runOnUiThread {
-                        val downloadUrl = task.result.toString()
-                        val messageMap = HashMap<String, Any>()
-                        val userName = UserDataService.name
-                        val serverTimeStamp = Firebase.getServerTimeStamp()
+                    val downloadUrl = task.result.toString()
+                    val messageMap = HashMap<String, Any>()
+                    val userName = UserDataService.name
+                    val serverTimeStamp = Firebase.getServerTimeStamp()
 
-                        messageMap[ID_REF] = messageId
-                        messageMap[TYPE_REF] = "image"
-                        messageMap[MESSAGE_BODY_REF] = downloadUrl
-                        messageMap[CHANNEL_ID_REF] = channelId
-                        messageMap[USER_NAME_REF] = userName
-                        messageMap[AVATAR_URL_REF] = "https://$userName-avatar-url-link.jpg" // TODO: add avatar
-                        messageMap[TIMESTAMP_REF] = serverTimeStamp
+                    messageMap[ID_REF] = messageId
+                    messageMap[TYPE_REF] = "image"
+                    messageMap[MESSAGE_BODY_REF] = downloadUrl
+                    messageMap[CHANNEL_ID_REF] = channelId
+                    messageMap[USER_NAME_REF] = userName
+                    messageMap[AVATAR_URL_REF] = "https://$userName-avatar-url-link.jpg" // TODO: add avatar
+                    messageMap[TIMESTAMP_REF] = serverTimeStamp
 
-                        messagesRef.child(messageId).setValue(messageMap)
+                    messagesRef.child(messageId).setValue(messageMap)
 
-                        messageTextField.text.clear()
-                        hideKeyboard()
-                    }
+                    messageTextField.text.clear()
+                    hideKeyboard()
                 }
             }
         }

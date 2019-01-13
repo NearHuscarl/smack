@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Controllers.UserProfileActivity">
+
+    <ImageView
+        android:id="@+id/createAvatarImageView2"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="32dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/profiledefault" />
+
+    <TextView
+        android:id="@+id/displayNameTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="8dp"
+        android:textColor="@color/colorAccent"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/createAvatarImageView2"
+        tools:text="Display Name" />
+
+    <ImageView
+        android:id="@+id/jobImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:tint="@color/colorAccent"
+        app:layout_constraintStart_toStartOf="@+id/locationImageView"
+        app:layout_constraintTop_toBottomOf="@+id/locationImageView"
+        app:srcCompat="@drawable/job" />
+
+    <TextView
+        android:id="@+id/jobTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/jobImageView"
+        app:layout_constraintStart_toEndOf="@+id/jobImageView"
+        app:layout_constraintTop_toTopOf="@+id/jobImageView"
+        tools:text="Cai win dao" />
+
+    <ImageView
+        android:id="@+id/emailImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="64dp"
+        android:layout_marginTop="24dp"
+        android:tint="@color/colorAccent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sendFriendRequestBtn"
+        app:srcCompat="@drawable/email" />
+
+    <ImageView
+        android:id="@+id/phoneImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:tint="@color/colorAccent"
+        app:layout_constraintStart_toStartOf="@+id/emailImageView"
+        app:layout_constraintTop_toBottomOf="@+id/emailImageView"
+        app:srcCompat="@drawable/phone" />
+
+    <ImageView
+        android:id="@+id/genderImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:tint="@color/colorAccent"
+        app:layout_constraintStart_toStartOf="@+id/phoneImageView"
+        app:layout_constraintTop_toBottomOf="@+id/phoneImageView"
+        app:srcCompat="@drawable/gender" />
+
+    <ImageView
+        android:id="@+id/registerDateImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:tint="@color/colorAccent"
+        app:layout_constraintStart_toStartOf="@+id/jobImageView"
+        app:layout_constraintTop_toBottomOf="@+id/jobImageView"
+        app:srcCompat="@drawable/calendar" />
+
+    <ImageView
+        android:id="@+id/locationImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:tint="@color/colorAccent"
+        app:layout_constraintStart_toStartOf="@+id/birthdayImageView"
+        app:layout_constraintTop_toBottomOf="@+id/birthdayImageView"
+        app:srcCompat="@drawable/location" />
+
+    <ImageView
+        android:id="@+id/birthdayImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:tint="@color/colorAccent"
+        app:layout_constraintStart_toStartOf="@+id/genderImageView"
+        app:layout_constraintTop_toBottomOf="@+id/genderImageView"
+        app:srcCompat="@drawable/birthday" />
+
+    <TextView
+        android:id="@+id/emailTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/emailImageView"
+        app:layout_constraintStart_toEndOf="@+id/emailImageView"
+        app:layout_constraintTop_toTopOf="@+id/emailImageView"
+        tools:text="abc12345@gmail.com" />
+
+    <TextView
+        android:id="@+id/phoneTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/phoneImageView"
+        app:layout_constraintStart_toEndOf="@+id/phoneImageView"
+        app:layout_constraintTop_toTopOf="@+id/phoneImageView"
+        tools:text="0914349929" />
+
+    <TextView
+        android:id="@+id/genderTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/genderImageView"
+        app:layout_constraintStart_toEndOf="@+id/genderImageView"
+        app:layout_constraintTop_toBottomOf="@+id/phoneImageView"
+        app:layout_constraintVertical_bias="1.0"
+        tools:text="Male" />
+
+    <TextView
+        android:id="@+id/birthdayTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/birthdayImageView"
+        app:layout_constraintStart_toEndOf="@+id/birthdayImageView"
+        app:layout_constraintTop_toTopOf="@+id/birthdayImageView"
+        tools:text="19/01/1997" />
+
+    <TextView
+        android:id="@+id/registerDateTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/registerDateImageView"
+        app:layout_constraintStart_toEndOf="@+id/registerDateImageView"
+        app:layout_constraintTop_toTopOf="@+id/registerDateImageView"
+        tools:text="24/12/2018" />
+
+    <TextView
+        android:id="@+id/locationTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="19dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/locationImageView"
+        app:layout_constraintStart_toEndOf="@+id/locationImageView"
+        app:layout_constraintTop_toTopOf="@+id/locationImageView"
+        tools:text="Long An, Tan An city" />
+
+    <Button
+        android:id="@+id/sendFriendRequestBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:background="@color/colorAccent"
+        android:paddingLeft="15dp"
+        android:paddingTop="0dp"
+        android:paddingRight="15dp"
+        android:paddingBottom="0dp"
+        android:text="SEND FRIEND REQUEST"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/displayNameTextView" />
+</android.support.constraint.ConstraintLayout>
