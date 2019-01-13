@@ -2,7 +2,6 @@ package com.nearhuscarl.smack.Adapters
 
 import android.content.Context
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +11,6 @@ import com.nearhuscarl.smack.Models.Message
 import com.nearhuscarl.smack.R
 import com.nearhuscarl.smack.Services.UserDataService
 import com.squareup.picasso.Picasso
-import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -55,7 +53,11 @@ class MessageAdapter(val context: Context, val messages: ArrayList<Message>) : R
             else
             {
                 messageBody?.visibility = View.INVISIBLE
-                Picasso.get().load(message.messageBody).placeholder(R.drawable.profiledefault).into(messageImage)
+                Picasso.get()
+                        .load(message.messageBody)
+                        .resize(400, 0)
+                        .placeholder(R.drawable.download)
+                        .into(messageImage)
             }
         }
 

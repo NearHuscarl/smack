@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.AlertDialog
@@ -18,14 +17,11 @@ import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import com.firebase.ui.auth.AuthUI
-import com.google.android.gms.tasks.Continuation
-import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.storage.UploadTask
 import com.nearhuscarl.smack.Adapters.MessageAdapter
 import com.nearhuscarl.smack.Models.Channel
 import com.nearhuscarl.smack.Models.Message
@@ -40,12 +36,11 @@ import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 
-class MainActivity : AppCompatActivity()
-{
+class MainActivity : AppCompatActivity() {
     lateinit var channelAdapter: ArrayAdapter<Channel>
     lateinit var messageAdapter: MessageAdapter
     lateinit var drawerToggle: SmoothActionBarDrawerToggle
-    var messagesLoaded = false
+    var isDrawerIdle = true
     var selectedChannel: Channel? = null
 
     var typingStarted = false
@@ -54,10 +49,7 @@ class MainActivity : AppCompatActivity()
         channelAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, MessageService.channels)
         channel_list.adapter = channelAdapter
 
-        messageAdapter = MessageAdapter(this, MessageService.messages)
-        messageListView.adapter = messageAdapter
-        val layoutManager = LinearLayoutManager(this)
-        messageListView.layoutManager = layoutManager
+        resetMessageAdapter()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -108,11 +100,16 @@ class MainActivity : AppCompatActivity()
 
                 finish()
             }
-        }
-        else if (requestCode == GALLERY_PICK && resultCode == Activity.RESULT_OK)
-        {
+        } else if (requestCode == GALLERY_PICK && resultCode == Activity.RESULT_OK) {
             sendChatMessageImage(data)
         }
+    }
+
+    private fun resetMessageAdapter() {
+        messageAdapter = MessageAdapter(this, MessageService.messages)
+        messageListView.adapter = messageAdapter
+        val layoutManager = LinearLayoutManager(this)
+        messageListView.layoutManager = layoutManager
     }
 
     private fun displayChatMessagesAtStartup(id: String?, name: String?, email: String?) {
@@ -138,13 +135,12 @@ class MainActivity : AppCompatActivity()
         Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF").removeEventListener(onNewMessage)
         Firebase.database.child("$CHANNELS_REF/$channelId/$SOMEONE_TYPING_REF").removeEventListener(onSomeoneTypingMessage)
 
-        if (UserDataService.id == Firebase.database.child("$CHANNELS_REF/$channelId/$SOMEONE_TYPING_REF/$USER_ID_REF").toString())
-        {
+        if (UserDataService.id == Firebase.database.child("$CHANNELS_REF/$channelId/$SOMEONE_TYPING_REF/$USER_ID_REF").toString()) {
             Firebase.database.child("$CHANNELS_REF/$channelId/$SOMEONE_TYPING_REF/$VALUE_REF").setValue(false)
         }
 
         MessageService.clearMessages()
-        messageAdapter.notifyDataSetChanged()
+        resetMessageAdapter()
     }
 
     private fun subscribeChannel(channelId: String?) {
@@ -223,7 +219,7 @@ class MainActivity : AppCompatActivity()
         }
 
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-            if (!TextUtils.isEmpty(s.toString()) && s.toString().trim().length == 1)
+            if (!TextUtils.isEmpty(s.toString()) && selectedChannel != null && s.toString().trim().length == 1)
                 setTypingStatus(true)
             else if (s.toString().trim().isEmpty() && typingStarted)
                 setTypingStatus(false)
@@ -245,8 +241,6 @@ class MainActivity : AppCompatActivity()
         override fun onDataChange(dataSnapshot: DataSnapshot) {
             if (!dataSnapshot.exists()) // no message in this channel, stop showing spinner
                 enableSpinner(false)
-            else
-                messagesLoaded = true
         }
 
         override fun onCancelled(databaseError: DatabaseError) {
@@ -259,8 +253,7 @@ class MainActivity : AppCompatActivity()
             if (!dataSnapshot.exists())
                 return
 
-            if (UserDataService.id != dataSnapshot.child(USER_ID_REF).value)
-            {
+            if (UserDataService.id != dataSnapshot.child(USER_ID_REF).value) {
                 val someoneElseTyping = dataSnapshot.child(VALUE_REF).value as Boolean
 
                 if (someoneElseTyping)
@@ -313,7 +306,7 @@ class MainActivity : AppCompatActivity()
             if (channelId == selectedChannel?.id) {
                 val id = dataSnapshot.child(ID_REF).value.toString()
                 val type = dataSnapshot.child(TYPE_REF).value.toString()
-                var msgBody = dataSnapshot.child(MESSAGE_BODY_REF).value.toString() // TODO: change back to val
+                val msgBody = dataSnapshot.child(MESSAGE_BODY_REF).value.toString()
                 val userName = dataSnapshot.child(USER_NAME_REF).value.toString()
                 val avatarUrl = dataSnapshot.child(AVATAR_URL_REF).value.toString()
                 val timeStamp = dataSnapshot.child(TIMESTAMP_REF).value.toString()
@@ -324,14 +317,19 @@ class MainActivity : AppCompatActivity()
             // Only run those lines of code AFTER the drawer closing completely
             // to avoid making the closing animation stutter
             // https://stackoverflow.com/questions/18343018/optimizing-drawer-and-activity-launching-speed
-            drawerToggle.runWhenIdle(Runnable {
-                if (messagesLoaded) {
-                    messageAdapter.notifyDataSetChanged()
-                    messageListView.smoothScrollToPosition(messageAdapter.itemCount - 1)
-                    enableSpinner(false)
-                    messagesLoaded = false
-                }
-            })
+            if (!isDrawerIdle)
+                drawerToggle.runWhenIdle(Runnable {
+                    updateChatMessage(dataSnapshot)
+                    isDrawerIdle = true
+                })
+            else
+                updateChatMessage(dataSnapshot)
+        }
+
+        private fun updateChatMessage(dataSnapshot: DataSnapshot) {
+            messageAdapter.notifyDataSetChanged()
+            messageListView.smoothScrollToPosition(messageAdapter.itemCount - 1)
+            enableSpinner(false)
         }
 
         override fun onChildChanged(dataSnapshot: DataSnapshot, previousChildName: String?) {
@@ -359,6 +357,7 @@ class MainActivity : AppCompatActivity()
         val newChannel = MessageService.channels[newChannelIndex]
 
         if (newChannel.id != selectedChannel?.id || selectedChannel == null) {
+            isDrawerIdle = false
             enableSpinner(true)
             unsubscribeChannel(selectedChannel?.id)
             selectedChannel = newChannel
@@ -432,6 +431,8 @@ class MainActivity : AppCompatActivity()
             if (data == null)
                 return
 
+            enableSpinner(true)
+
             val imageUri = data.data
             val channelId = selectedChannel?.id.toString()
             val messagesRef = Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF")
@@ -439,29 +440,30 @@ class MainActivity : AppCompatActivity()
             val imageUploadPathRef = Firebase.storage.child(MESSAGE_IMAGE_REF).child("$messageId.jpg")
 
             imageUploadPathRef.putFile(imageUri).continueWithTask { task ->
-                if (!task.isSuccessful) {
+                if (!task.isSuccessful)
                     throw task.exception!!
-                }
                 imageUploadPathRef.downloadUrl
             }.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val downloadUrl = task.result.toString()
-                    val messageMap = HashMap<String, Any>()
-                    val userName = UserDataService.name
-                    val serverTimeStamp = Firebase.getServerTimeStamp()
+                    runOnUiThread {
+                        val downloadUrl = task.result.toString()
+                        val messageMap = HashMap<String, Any>()
+                        val userName = UserDataService.name
+                        val serverTimeStamp = Firebase.getServerTimeStamp()
 
-                    messageMap[ID_REF] = messageId
-                    messageMap[TYPE_REF] = "image"
-                    messageMap[MESSAGE_BODY_REF] = downloadUrl
-                    messageMap[CHANNEL_ID_REF] = channelId
-                    messageMap[USER_NAME_REF] = userName
-                    messageMap[AVATAR_URL_REF] = "https://$userName-avatar-url-link.jpg" // TODO: add avatar
-                    messageMap[TIMESTAMP_REF] = serverTimeStamp
+                        messageMap[ID_REF] = messageId
+                        messageMap[TYPE_REF] = "image"
+                        messageMap[MESSAGE_BODY_REF] = downloadUrl
+                        messageMap[CHANNEL_ID_REF] = channelId
+                        messageMap[USER_NAME_REF] = userName
+                        messageMap[AVATAR_URL_REF] = "https://$userName-avatar-url-link.jpg" // TODO: add avatar
+                        messageMap[TIMESTAMP_REF] = serverTimeStamp
 
-                    messagesRef.child(messageId).setValue(messageMap)
+                        messagesRef.child(messageId).setValue(messageMap)
 
-                    messageTextField.text.clear()
-                    hideKeyboard()
+                        messageTextField.text.clear()
+                        hideKeyboard()
+                    }
                 }
             }
         }
