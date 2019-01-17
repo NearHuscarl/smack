@@ -11,6 +11,7 @@ import com.nearhuscarl.smack.Models.Message
 import com.nearhuscarl.smack.R
 import com.nearhuscarl.smack.Services.UserDataService
 import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.nav_header_main.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -37,10 +38,10 @@ class MessageAdapter(val context: Context, val messages: ArrayList<Message>) : R
         val messageImage = itemView?.findViewById<ImageView>(R.id.messageImage)
 
         fun bindMessage(context: Context, message: Message) {
-            // TODO: add avatar and remove those lines
-            val resourceId = context.resources.getIdentifier("dark1", "drawable", context.packageName)
-            userImage?.setImageResource(resourceId)
-            userImage?.setBackgroundColor(UserDataService.returnAvatarColor("[0.5, 0.5, 0.5, 1]"))
+            Picasso.get()
+                    .load(message.avatarUrl)
+                    .placeholder(R.drawable.profiledefault)
+                    .into(userImage)
 
             userName?.text = message.userName
             timeStamp?.text = getFormattedDate(message.timeStamp)

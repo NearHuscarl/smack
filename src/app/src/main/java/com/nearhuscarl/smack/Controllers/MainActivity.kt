@@ -25,6 +25,7 @@ import com.google.firebase.database.ValueEventListener
 import com.nearhuscarl.smack.Adapters.MessageAdapter
 import com.nearhuscarl.smack.Models.Channel
 import com.nearhuscarl.smack.Models.Message
+import com.nearhuscarl.smack.Models.User
 import com.nearhuscarl.smack.R
 import com.nearhuscarl.smack.RecyclerItemClickListener
 import com.nearhuscarl.smack.RecyclerTouchListener
@@ -33,10 +34,10 @@ import com.nearhuscarl.smack.Services.MessageService
 import com.nearhuscarl.smack.Services.UserDataService
 import com.nearhuscarl.smack.SmoothActionBarDrawerToggle
 import com.nearhuscarl.smack.Utilities.*
+import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import kotlinx.android.synthetic.main.message_list_view.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -86,7 +87,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
+/*
         if (requestCode == SIGN_IN_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 Toast.makeText(this,
@@ -105,7 +106,7 @@ class MainActivity : AppCompatActivity() {
 
                 finish()
             }
-        } else if (requestCode == GALLERY_PICK && resultCode == Activity.RESULT_OK) {
+        } else*/ if (requestCode == GALLERY_PICK && resultCode == Activity.RESULT_OK) {
             sendChatMessageImage(data)
         }
     }
@@ -117,7 +118,7 @@ class MainActivity : AppCompatActivity() {
         messageRecycleView.layoutManager = layoutManager
     }
 
-    private fun displayChatMessagesAtStartup(id: String?, name: String?, email: String?) {
+    private fun displayChatMessagesAtStartup(id: String?, name: String?, email: String?, profileImageUrl: String?) {
         UserDataService.id = id.toString()
         UserDataService.name = name.toString()
         UserDataService.email = email.toString()
@@ -128,11 +129,10 @@ class MainActivity : AppCompatActivity() {
         // after adding all channels. chat messages will be loaded in the currently selected channel
         Firebase.database.child(CHANNELS_REF).addChildEventListener(onNewChannel)
 
-        // TODO: add avatar and remove those lines
-        val resourceId = resources.getIdentifier("dark1", "drawable", packageName)
-        userImageNavHeader.setImageResource(resourceId)
-        userImageNavHeader.setBackgroundColor(UserDataService.returnAvatarColor("[0.5, 0.5, 0.5, 1]"))
-
+        Picasso.get()
+                .load(profileImageUrl)
+                .placeholder(R.drawable.profiledefault)
+                .into(userImageNavHeader)
         loginBtnNavHeader.text = "Log out"
     }
 
@@ -173,6 +173,37 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun logIn() {
+        if (FirebaseAuth.getInstance().currentUser == null)
+        {
+            val Intent = Intent(applicationContext, LoginActivity::class.java)
+            startActivity(Intent)
+            finish()
+        } else {
+            Toast.makeText(this,
+                    "Welcome back " + UserDataService.name,
+                    Toast.LENGTH_LONG)
+                    .show()
+            val user = FirebaseAuth.getInstance().currentUser
+            val userRef = Firebase.database.child(USERS_REF).child(user!!.uid)
+            val valueEventListener = object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    val userInfo = dataSnapshot.getValue(User::class.java)
+
+                    displayChatMessagesAtStartup(user.uid, userInfo?.name,
+                            FirebaseAuth.getInstance().currentUser?.email, userInfo?.avatar)
+                }
+                override fun onCancelled(databaseError: DatabaseError) {
+                    Log.d("error", databaseError.message) //Don't ignore errors!
+                }
+            }
+            userRef.addListenerForSingleValueEvent(valueEventListener)
+            loginBtnNavHeader.text = "Log out"
+        }
+        App.sharedPrefs.isLoggedIn = true
+
+
+
+/*
         if (FirebaseAuth.getInstance().currentUser == null) {
             startActivityForResult(
                     AuthUI.getInstance()
@@ -191,6 +222,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         App.sharedPrefs.isLoggedIn = true
+*/
     }
 
     private fun logOut() {
@@ -403,25 +435,34 @@ class MainActivity : AppCompatActivity() {
             val channelId = selectedChannel?.id.toString()
             val messagesRef = Firebase.database.child("$CHANNELS_REF/$channelId/$MESSAGES_REF")
             val messageId = messagesRef.push().key ?: return
-            val messageMap = HashMap<String, Any>()
-            val messageBody = messageTextField.text.toString()
             val userId = UserDataService.id
-            val userName = UserDataService.name
-            val serverTimeStamp = Firebase.getServerTimeStamp()
 
-            messageMap[ID_REF] = messageId
-            messageMap[TYPE_REF] = "text"
-            messageMap[MESSAGE_BODY_REF] = messageBody
-            messageMap[CHANNEL_ID_REF] = channelId
-            messageMap[USER_ID_REF] = userId
-            messageMap[USER_NAME_REF] = userName
-            messageMap[AVATAR_URL_REF] = "https://$userName-avatar-url-link.jpg" // TODO: add avatar
-            messageMap[TIMESTAMP_REF] = serverTimeStamp
+            Firebase.database.child("$USERS_REF/$userId").addListenerForSingleValueEvent(object: ValueEventListener{
+                override fun onCancelled(databaseError: DatabaseError) {
 
-            messagesRef.child(messageId).setValue(messageMap)
+                }
 
-            messageTextField.text.clear()
-            hideKeyboard()
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    val messageMap = HashMap<String, Any>()
+                    val messageBody = messageTextField.text.toString()
+                    val userName = UserDataService.name
+                    val serverTimeStamp = Firebase.getServerTimeStamp()
+
+                    messageMap[ID_REF] = messageId
+                    messageMap[TYPE_REF] = "text"
+                    messageMap[MESSAGE_BODY_REF] = messageBody
+                    messageMap[CHANNEL_ID_REF] = channelId
+                    messageMap[USER_ID_REF] = userId
+                    messageMap[USER_NAME_REF] = userName
+                    messageMap[AVATAR_URL_REF] = dataSnapshot.child("$AVATAR_REF").value.toString()
+                    messageMap[TIMESTAMP_REF] = serverTimeStamp
+
+                    messagesRef.child(messageId).setValue(messageMap)
+
+                    messageTextField.text.clear()
+                    hideKeyboard()
+                }
+            })
         }
     }
 

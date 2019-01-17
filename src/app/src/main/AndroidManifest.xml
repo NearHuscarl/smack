@@ -7,7 +7,7 @@
     <application
         android:name=".Controllers.App"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_round"
         android:inputType="textMultiLine|textShortMessage"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -30,6 +30,10 @@
             android:label="@string/title_activity_user_profile"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".Controllers.UserSettingActivity"></activity>
+        <activity android:name=".Controllers.ForgotPasswordActivity"></activity>
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
     </application>
 
 </manifest>

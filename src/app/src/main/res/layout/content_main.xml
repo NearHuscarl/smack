@@ -9,6 +9,12 @@
         tools:showIn="@layout/app_bar_main"
         tools:context=".Controllers.MainActivity">
 
+    <com.nearhuscarl.smack.Animations.AnimationView
+        android:id="@+id/animated_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="top|center_horizontal" />
+
     <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"

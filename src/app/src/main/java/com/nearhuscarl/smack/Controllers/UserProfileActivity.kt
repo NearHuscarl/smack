@@ -54,7 +54,7 @@ class UserProfileActivity : AppCompatActivity() {
         }
 
         private fun getInfoOrEmpty(str: String): String {
-            if (str.trim().isEmpty())
+            if (str.trim().isEmpty() || str == "null")
                 return "Empty"
             else
                 return str

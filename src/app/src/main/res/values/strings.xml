@@ -17,4 +17,6 @@
     <string name="message_image">message_image</string>
     <string name="title_activity_user_profile">UserProfileActivity</string>
     <string name="send_friend_request">SEND FRIEND REQUEST</string>
+    <string name="forget_password">Forget password?</string>
+    <string name="welcome_to_smack">WELCOME TO SMACK</string>
 </resources>
